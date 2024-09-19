@@ -93,6 +93,8 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
+vim.opt.termguicolors = true
+
 -- [[ Setting options ]]
 -- See `:help vim.opt`
 -- NOTE: You can change these options as you wish!
@@ -118,6 +120,12 @@ vim.opt.clipboard = 'unnamedplus'
 -- disable netrw for nvim-tree
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
+
+-- Tab and indent
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.expandtab = true
+vim.opt.autoindent = true
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -244,6 +252,24 @@ require('lazy').setup({
   --  This is equivalent to:
   --    require('Comment').setup({})
 
+  -- NOTE: Alpha
+  {
+    'goolord/alpha-nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('alpha').setup(require('alpha.themes.startify').config)
+    end,
+  },
+
+  -- NOTE: Autopairs
+  {
+    'windwp/nvim-autopairs',
+    event = 'InsertEnter',
+    config = true,
+    -- use opts = {} for passing setup options
+    -- this is equivalent to setup({}) function
+  },
+
   -- NOTE: Harpoon
   {
     'ThePrimeagen/harpoon',
@@ -271,6 +297,67 @@ require('lazy').setup({
   },
 
   -- NOTE: nvim tree plugin
+  {
+    'andweeb/presence.nvim',
+  },
+  {
+    'ThePrimeagen/vim-be-good',
+    config = function()
+      -- Any additional setup or configuration for vim-be-good
+    end,
+  },
+  {
+    'xiyaowong/nvim-transparent',
+    config = function()
+      require('transparent').setup {
+        -- table: default groups
+        groups = {
+          'Normal',
+          'NormalNC',
+          'Comment',
+          'Constant',
+          'Special',
+          'Identifier',
+          'Statement',
+          'PreProc',
+          'Type',
+          'Underlined',
+          'Todo',
+          'String',
+          'Function',
+          'Conditional',
+          'Repeat',
+          'Operator',
+          'Structure',
+          'LineNr',
+          'NonText',
+          'SignColumn',
+          'CursorLine',
+          'CursorLineNr',
+          'StatusLine',
+          'StatusLineNC',
+          'EndOfBuffer',
+        },
+        -- table: additional groups that should be cleared
+        extra_groups = {},
+        -- table: groups you don't want to clear
+        exclude_groups = {},
+        -- function: code to be executed after highlight groups are cleared
+        -- Also the user event "TransparentClear" will be triggered
+        on_clear = function() end,
+      }
+    end,
+  },
+  -- This plugin allows you to preview markdown files in your browser.
+  {
+    'iamcco/markdown-preview.nvim',
+    cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
+    build = 'cd app && npm install',
+    init = function()
+      vim.g.mkdp_filetypes = { 'markdown' }
+    end,
+    ft = { 'markdown' },
+  },
   {
     'nvim-tree/nvim-tree.lua',
     version = '*',
@@ -492,6 +579,11 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sn', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
+
+      -- Shortcut for notes
+      vim.keymap.set('n', '<leader>sd', function()
+        builtin.find_files { cwd = '~/Code/notes' }
+      end, { desc = '[S]earch [N]notes files' })
     end,
   },
 
@@ -663,7 +755,7 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
-        tsserver = {},
+        ts_ls = {},
         tailwindcss = {},
         html = {},
         --
@@ -734,7 +826,7 @@ require('lazy').setup({
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
+        local disable_filetypes = { c = true, cpp = true, javascript = true }
         return {
           timeout_ms = 500,
           lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
@@ -747,7 +839,7 @@ require('lazy').setup({
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
-        -- javascript = { { "prettierd", "prettier" } },
+        javascript = { { 'prettierd' } },
       },
     },
   },
@@ -863,21 +955,36 @@ require('lazy').setup({
     end,
   },
 
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
-    init = function()
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
-
-      -- You can configure highlights by doing something like:
-      vim.cmd.hi 'Comment gui=none'
+  -- { -- You can easily change to a different colorscheme.
+  --   -- Change the name of the colorscheme plugin below, and then
+  --   -- change the command in the config to whatever the name of that colorscheme is.
+  --   --
+  --   -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+  --   'folke/tokyonight.nvim',
+  --   priority = 1000, -- Make sure to load this before all the other start plugins.
+  --   init = function()
+  --     -- Load the colorscheme here.
+  --     -- Like many other themes, this one has different styles, and you could load
+  --     -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+  --     vim.cmd.colorscheme 'tokyonight-storm'
+  --
+  --     -- You can configure highlights by doing something like:
+  --     vim.cmd.hi 'Comment gui=none'
+  --   end,
+  -- },
+  {
+    'catppuccin/nvim',
+    name = 'catppuccin',
+    priority = 1000,
+    config = function()
+      -- Set up Catppuccin with Mocha flavor
+      require('catppuccin').setup {
+        flavour = 'mocha', -- Change to 'mocha' flavor
+        transparent_background = true,
+        -- You can add additional options here
+      }
+      -- Apply the colorscheme
+      vim.cmd 'colorscheme catppuccin'
     end,
   },
 
