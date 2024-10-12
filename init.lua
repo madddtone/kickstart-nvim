@@ -1,6 +1,6 @@
 --[[
 
-=====================================================================
+=====================================================================init
 ==================== READ THIS BEFORE CONTINUING ====================
 =====================================================================
 ========                                    .-----.          ========
@@ -24,8 +24,8 @@ What is Kickstart?
 
   Kickstart.nvim is *not* a distribution.
 
-  Kickstart.nvim is a starting point for your own configuration.
-    The goal is that you can read every line of code, top-to-bottom, understand
+  Kickstart.nvim is a starting point for your own configuration.init
+    The goal is that you can read every line of code, top-to-bottom, understandinit
     what your configuration is doing, and modify it to suit your needs.
 
     Once you've done that, you can start exploring, configuring and tinkering to
@@ -72,7 +72,7 @@ Kickstart Guide:
 
    NOTE: Look for lines like this
 
-    Throughout the file. These are for you, the reader, to help you understand what is happening.
+    Throughout the file. These are for you, the reader, to help you understand what is happening.ini
     Feel free to delete them once you know what you're doing, but they should serve as a guide
     for when you are first encountering a few different constructs in your Neovim config.
 
@@ -94,6 +94,9 @@ vim.g.maplocalleader = ' '
 vim.g.have_nerd_font = true
 
 vim.opt.termguicolors = true
+
+-- vim color column
+vim.opt.colorcolumn = '120'
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -205,6 +208,11 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+-- Open oil float
+vim.keymap.set('n', '<leader>e', function()
+  require('oil').open_float()
+end, { noremap = true, silent = true })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -295,11 +303,6 @@ require('lazy').setup({
       end, { desc = 'Navigate to file 4' })
     end,
   },
-
-  -- NOTE: nvim tree plugin
-  {
-    'andweeb/presence.nvim',
-  },
   {
     'ThePrimeagen/vim-be-good',
     config = function()
@@ -359,33 +362,118 @@ require('lazy').setup({
     ft = { 'markdown' },
   },
   {
-    'nvim-tree/nvim-tree.lua',
-    version = '*',
-    lazy = false,
-    dependencies = {
-      'nvim-tree/nvim-web-devicons',
+    'folke/flash.nvim',
+    event = 'VeryLazy',
+    opts = {},
+  -- stylua: ignore
+    keys = {
+      { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
+      { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
+      { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
+      { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
     },
+  },
+  {
+    'Wansmer/treesj',
+    keys = { '<space>m', '<space>j', '<space>s' },
+    dependencies = { 'nvim-treesitter/nvim-treesitter' }, -- if you install parsers with `nvim-treesitter`
     config = function()
-      require('nvim-tree').setup {
-        update_focused_file = {
-          enable = true,
+      require('treesj').setup {--[[ your config ]]
+      }
+    end,
+  },
+  {
+    'norcalli/nvim-colorizer.lua',
+    config = function()
+      require('colorizer').setup {
+        '*',
+        css = { rgb_fn = true },
+      }
+    end,
+  },
+  {
+    'stevearc/oil.nvim',
+    opts = {},
+    dependencies = { { 'echasnovski/mini.icons', opts = {} } },
+    config = function()
+      require('oil').setup {
+        default_file_explorer = true, -- Disable it as the default file explorer
+        view_options = {
+          show_hidden = true,
         },
-        view = {
-          width = 40,
-          side = 'left',
-        },
-        renderer = {
-          highlight_opened_files = 'all',
-          highlight_git = true,
-          root_folder_modifier = ':t',
-          indent_markers = {
-            enable = true,
+        keymaps = {
+          ['g?'] = 'actions.show_help',
+          ['<CR>'] = 'actions.select',
+          ['<C-s>'] = {
+            'actions.select',
+            opts = { vertical = true },
+            desc = 'Open the entry in a vertical split',
           },
-          full_name = true,
+          ['<C-h>'] = {
+            'actions.select',
+            opts = { horizontal = true },
+            desc = 'Open the entry in a horizontal split',
+          },
+          ['q'] = 'actions.close',
+          ['<C-l>'] = 'actions.refresh',
+          ['-'] = 'actions.parent',
+          ['_'] = 'actions.open_cwd',
+          ['`'] = 'actions.cd',
+          ['~'] = { 'actions.cd', opts = { scope = 'tab' }, desc = ':tcd to the current oil directory' },
+          ['gs'] = 'actions.change_sort',
+          ['gx'] = 'actions.open_external',
+          ['g.'] = 'actions.toggle_hidden',
+          ['g\\'] = 'actions.toggle_trash',
+        },
+        float = {
+          padding = 2,
+          max_width = 40,
+          max_height = 40,
+          border = 'rounded',
+          win_options = {
+            winblend = 0,
+          },
+          -- Adjust the position of the floating window
+          override = function(conf)
+            conf.anchor = 'NW'
+            conf.relative = 'win'
+            conf.row = 2 -- Adjust vertical positioning
+            conf.col = 4 -- Adjust horizontal positioning to move it near the line numbers
+            return conf
+          end,
         },
       }
     end,
   },
+  -- {
+  --   'nvim-tree/nvim-tree.lua',
+  --   version = '*',
+  --   lazy = false,
+  --   dependencies = {
+  --     'nvim-tree/nvim-web-devicons',
+  --   },
+  --   config = function()
+  --     require('nvim-tree').setup {
+  --       update_focused_file = {
+  --         enable = true,
+  --       },
+  --       view = {
+  --         width = 40,
+  --         side = 'left',
+  --       },
+  --       renderer = {
+  --         highlight_opened_files = 'all',
+  --         highlight_git = true,
+  --         root_folder_modifier = ':t',
+  --         indent_markers = {
+  --           enable = true,
+  --         },
+  --         full_name = true,
+  --       },
+  --     }
+  --   end,
+  -- },
 
   -- lazy git
   {
@@ -409,7 +497,44 @@ require('lazy').setup({
   },
 
   -- "gc" to comment visual regions/lines
-  { 'numToStr/Comment.nvim', opts = {} },
+  {
+    'numToStr/Comment.nvim',
+    event = 'BufReadPre',
+    lazy = false,
+    dependencies = {
+      'JoosepAlviste/nvim-ts-context-commentstring',
+      'nvim-treesitter/nvim-treesitter',
+    },
+    config = function()
+      -- Lmao I forgot to initialize config.
+      local prehook = require('ts_context_commentstring.integrations.comment_nvim').create_pre_hook()
+      require('Comment').setup {
+        padding = true,
+        sticky = true,
+        ignore = '^$',
+        toggler = {
+          line = 'gcc',
+          block = 'gbc',
+        },
+        opleader = {
+          line = 'gc',
+          block = 'gb',
+        },
+        extra = {
+          above = 'gcO',
+          below = 'gco',
+          eol = 'gcA',
+        },
+        mappings = {
+          basic = true,
+          extra = true,
+          extended = false,
+        },
+        pre_hook = prehook,
+        post_hook = prehook,
+      }
+    end,
+  },
 
   -- NOTE: Supermaven
   {
@@ -756,6 +881,7 @@ require('lazy').setup({
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
         ts_ls = {},
+        jsonls = {},
         tailwindcss = {},
         html = {},
         --
@@ -826,7 +952,7 @@ require('lazy').setup({
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true, javascript = true }
+        local disable_filetypes = { c = true, cpp = true, javascript = false }
         return {
           timeout_ms = 500,
           lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
