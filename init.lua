@@ -95,8 +95,8 @@ vim.g.have_nerd_font = true
 
 vim.opt.termguicolors = true
 
--- vim color column
-vim.opt.colorcolumn = '120'
+-- -- vim color column
+-- vim.opt.colorcolumn = '120'
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
