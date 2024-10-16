@@ -176,10 +176,13 @@ vim.opt.scrolloff = 10
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
--- NOTE: nvim tree keybind
-vim.keymap.set('n', '<C-g>', ':NvimTreeToggle<CR>', { desc = 'Toggle NvimTree' })
+-- -- NOTE: nvim tree keybind
+-- vim.keymap.set('n', '<C-g>', ':NvimTreeToggle<CR>', { desc = 'Toggle NvimTree' })
 
--- Diagnostic keymaps
+-- NOTE: Neo-Tree keybind
+vim.keymap.set('n', '<C-g>', ':Neotree float filesystem reveal=true<CR>', { desc = 'Toggle Neo-Tree in float and reveal buffer' })
+
+-- Diagnostic keymapsneo tree
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
@@ -208,10 +211,10 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
--- Open oil float
-vim.keymap.set('n', '<leader>e', function()
-  require('oil').open_float()
-end, { noremap = true, silent = true })
+-- -- Open oil float
+-- vim.keymap.set('n', '<leader>`', function()
+--   require('oil').open_float()
+-- end, { noremap = true, silent = true })
 
 -- Open aerial float
 vim.keymap.set('n', '<leader>,', '<cmd>AerialToggle!<CR>')
@@ -398,12 +401,19 @@ require('lazy').setup({
   {
     'stevearc/aerial.nvim',
     opts = {
-      -- Add your setup configuration here
+      -- Configuration setup
       on_attach = function(bufnr)
         -- Jump forwards/backwards with '{' and '}'
         vim.keymap.set('n', '{', '<cmd>AerialPrev<CR>', { buffer = bufnr })
         vim.keymap.set('n', '}', '<cmd>AerialNext<CR>', { buffer = bufnr })
       end,
+      -- Enable the floating window
+      layout = {
+        default_direction = 'float', -- Opens Aerial in a floating window
+        -- Floating window settings
+        placement = 'edge', -- Ensures the window opens near the edge
+      },
+      -- Additional settings can go here
     },
     -- Optional dependencies
     dependencies = {
@@ -412,89 +422,51 @@ require('lazy').setup({
     },
   },
   {
-    'stevearc/oil.nvim',
-    opts = {},
-    dependencies = { { 'echasnovski/mini.icons', opts = {} } },
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v3.x',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
+      'MunifTanjim/nui.nvim',
+    },
     config = function()
-      require('oil').setup {
-        default_file_explorer = true, -- Disable it as the default file explorer
-        view_options = {
-          show_hidden = true,
+      require('neo-tree').setup {
+        window = {
+          position = 'float', -- Floating window
+          popup = {
+            size = {
+              height = '80%', -- Floating window height (percentage or fixed)
+              width = '40%', -- Floating window width (percentage or fixed)
+            },
+            border = 'rounded', -- Border style for floating window
+            position = {
+              row = 1, -- Align the floating window vertically near the top
+              col = 1, -- Align it near the left side (close to line numbers)
+            },
+            offset = {
+              row = 0,
+              col = 2, -- Slightly move it away from the very left, next to line numbers
+            },
+          },
         },
-        keymaps = {
-          ['g?'] = 'actions.show_help',
-          ['<CR>'] = 'actions.select',
-          ['<C-s>'] = {
-            'actions.select',
-            opts = { vertical = true },
-            desc = 'Open the entry in a vertical split',
+        filesystem = {
+          follow_current_file = {
+            enabled = true, -- Automatically expand and highlight the current file
           },
-          ['<C-h>'] = {
-            'actions.select',
-            opts = { horizontal = true },
-            desc = 'Open the entry in a horizontal split',
+          hijack_netrw_behavior = 'open_default', -- Hijack netrw and use Neo-Tree instead
+          use_libuv_file_watcher = true, -- Automatically refresh when files change
+          filtered_items = {
+            hide_dotfiles = false, -- Show hidden files
           },
-          ['q'] = 'actions.close',
-          ['<C-l>'] = 'actions.refresh',
-          ['-'] = 'actions.parent',
-          ['_'] = 'actions.open_cwd',
-          ['`'] = 'actions.cd',
-          ['~'] = { 'actions.cd', opts = { scope = 'tab' }, desc = ':tcd to the current oil directory' },
-          ['gs'] = 'actions.change_sort',
-          ['gx'] = 'actions.open_external',
-          ['g.'] = 'actions.toggle_hidden',
-          ['g\\'] = 'actions.toggle_trash',
         },
-        float = {
-          padding = 2,
-          max_width = 40,
-          max_height = 40,
-          border = 'rounded',
-          win_options = {
-            winblend = 0,
+        buffers = {
+          follow_current_file = {
+            enabled = true, -- Highlight the current file buffer in the file tree
           },
-          -- Adjust the position of the floating window
-          override = function(conf)
-            conf.anchor = 'NW'
-            conf.relative = 'win'
-            conf.row = 2 -- Adjust vertical positioning
-            conf.col = 4 -- Adjust horizontal positioning to move it near the line numbers
-            return conf
-          end,
         },
       }
     end,
   },
-  -- {
-  --   'nvim-tree/nvim-tree.lua',
-  --   version = '*',
-  --   lazy = false,
-  --   dependencies = {
-  --     'nvim-tree/nvim-web-devicons',
-  --   },
-  --   config = function()
-  --     require('nvim-tree').setup {
-  --       update_focused_file = {
-  --         enable = true,
-  --       },
-  --       view = {
-  --         width = 40,
-  --         side = 'left',
-  --       },
-  --       renderer = {
-  --         highlight_opened_files = 'all',
-  --         highlight_git = true,
-  --         root_folder_modifier = ':t',
-  --         indent_markers = {
-  --           enable = true,
-  --         },
-  --         full_name = true,
-  --       },
-  --     }
-  --   end,
-  -- },
-
-  -- lazy git
   {
     'kdheepak/lazygit.nvim',
     cmd = {
